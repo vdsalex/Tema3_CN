@@ -16,6 +16,71 @@ public class Main
         }
     }
 
+    // returns the element if found, else RareElement with -1 on index
+    private static RareElement getRareElement(RareElement[] line, int index)
+    {
+        for (RareElement element: line)
+        {
+            if (element.index == index)
+                return element;
+        }
+
+        RareElement elem = new RareElement();
+        elem.index = -1;
+        return elem;
+    }
+
+    private static RareElement[][] RareMultiply(RareElement[][] A, RareElement[][] B, int n)
+    {
+        RareElement[][] mmResult = new RareElement[n][n];
+        int lineCount = 0;
+
+        for (int lineA = 0; lineA < n; lineA++)
+        {
+            RareElement diagonalElem = null;
+            RareElement[] resultLine = new RareElement[n];
+            int elemCount = 0;
+
+            // TODO Check if line vector exists?
+            for (int columnB = 0; columnB < n ; columnB++)
+            {
+                // calculate element
+                double result = 0;
+
+                for (int k = 0; k< A[lineA].length ;k++ )
+                {
+                    RareElement bElement = getRareElement(B[k], columnB);
+                    if (bElement.index != -1)
+                        result+= ( bElement.value * A[lineA][k].value) ;
+                }
+
+                // remember diagonal element to add it later
+                if (result != 0) {
+
+                    RareElement resultElem = new RareElement();
+                    resultElem.index = columnB;
+                    resultElem.value = result;
+
+                    if (lineA == columnB) {
+                        diagonalElem = resultElem;
+                    }
+                    else {
+                        resultLine[elemCount] = resultElem;
+                        elemCount++;
+                    }
+                }
+
+            }
+
+            // add the diagonal elem
+            resultLine[elemCount] = diagonalElem;
+
+            mmResult[lineCount] = resultLine;
+            lineCount++;
+        }
+
+        return mmResult;
+    }
     public static void main(String args[])
     {
         eps = Math.pow(10, -7);
