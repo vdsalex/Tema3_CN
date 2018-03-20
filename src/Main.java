@@ -23,8 +23,8 @@ public class Main
         double[][] example = {
                 {1.0, 2.0, 0, 0, 4.0},
                 {0, 9.0, 0, 0, 21.0},
-                {-4.0, -5.9, 0, -1.0, 0},
-                {99.0, 7.0, 7.0, 0, -0.9},
+                {-4.0, 0, -5.9, -1.0, 0},
+                {99.0, 7.0, 7.0, 5.0, -0.9},
                 {51.4, 0, 0, 0, -73.1}
         };
 
@@ -41,16 +41,14 @@ public class Main
         {
             int size = res[i].length;
 
-            for(j = 0; j < size; j++)
+            for (j = 0; j < size; j++)
             {
                 System.out.print(res[i][j].toString());
                 System.out.print(' ');
             }
 
             System.out.println();
-
         }
-
     }
 
     private static RareElement[][] memorizeRareMatrix(Matrix x)
@@ -58,6 +56,7 @@ public class Main
         int n = x.getRowDimension();
         int m = x.getColumnDimension();
         int countNonZeroInRow;
+        double value;
         int rowIndex, colIndex, memResultColIndex;
 
         RareElement[][] memResult = new RareElement[n][];
@@ -83,15 +82,24 @@ public class Main
 
             for (colIndex = 0; colIndex < m; colIndex++)
             {
-                double value = x.get(rowIndex, colIndex);
+                value = x.get(rowIndex, colIndex);
 
-                if(Math.abs(value) > eps)
+                if(Math.abs(value) > eps && colIndex != rowIndex)
                 {
                     memResult[rowIndex][memResultColIndex] = new RareElement();
                     memResult[rowIndex][memResultColIndex].value = value;
                     memResult[rowIndex][memResultColIndex].index = colIndex;
                     memResultColIndex++;
                 }
+            }
+
+            value = x.get(rowIndex, rowIndex);
+
+            if(Math.abs(value) > eps)
+            {
+                memResult[rowIndex][memResultColIndex] = new RareElement();
+                memResult[rowIndex][memResultColIndex].value = value;
+                memResult[rowIndex][memResultColIndex].index = rowIndex;
             }
         }
 
