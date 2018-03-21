@@ -38,7 +38,7 @@ public class Main
         for (int lineA = 0; lineA < n; lineA++)
         {
             RareElement diagonalElem = null;
-            RareElement[] resultLine = new RareElement[n];
+            RareElement[] tempResultLine = new RareElement[n];
             int elemCount = 0;
 
             // TODO Check if line vector exists?
@@ -47,9 +47,10 @@ public class Main
                 // calculate element
                 double result = 0;
 
-                for (int k = 0; k< A[lineA].length ;k++ )
+                for (int k = 0; k < A[lineA].length ;k++ )
                 {
-                    RareElement bElement = getRareElement(B[k], columnB);
+                    RareElement debug_first = A[lineA][k];
+                    RareElement bElement = getRareElement(B[A[lineA][k].index], columnB);
                     if (bElement.index != -1)
                         result+= ( bElement.value * A[lineA][k].value) ;
                 }
@@ -65,7 +66,7 @@ public class Main
                         diagonalElem = resultElem;
                     }
                     else {
-                        resultLine[elemCount] = resultElem;
+                        tempResultLine[elemCount] = resultElem;
                         elemCount++;
                     }
                 }
@@ -73,8 +74,14 @@ public class Main
             }
 
             // add the diagonal elem
-            resultLine[elemCount] = diagonalElem;
+            tempResultLine[elemCount] = diagonalElem;
 
+            // copy each element in a new vector with exact size
+
+            RareElement[] resultLine = new RareElement[elemCount + 1];
+            System.arraycopy(tempResultLine, 0, resultLine, 0, elemCount + 1);
+
+            // TODO Can find number of lines before?
             mmResult[lineCount] = resultLine;
             lineCount++;
         }
@@ -93,13 +100,25 @@ public class Main
                 {51.4, 0, 0, 0, -73.1}
         };
 
+        double[][] example1 = {
+                {1.0, 2.0, 0, 0, 4.0},
+                {0, 9.0, 0, 0, 21.0},
+                {-4.0, 0, -5.9, -1.0, 0},
+                {99.0, 7.0, 7.0, 5.0, -0.9},
+                {51.4, 0, 0, 0, -73.1}
+        };
+
         Matrix ex = new Matrix(example);
+        Matrix ex1 = new Matrix(example1);
 
         ex.print(5, 1);
+        ex1.print(5, 1);
 
         RareElement[][] res = memorizeRareMatrix(ex);
+        RareElement[][] res1 = memorizeRareMatrix(ex1);
 
-        System.out.println();
+        RareElement[][] res2 = RareMultiply(res, res1, 5);
+        
         int i, j;
 
         for(i = 0; i < 5; i++)
@@ -109,6 +128,36 @@ public class Main
             for (j = 0; j < size; j++)
             {
                 System.out.print(res[i][j].toString());
+                System.out.print(' ');
+            }
+
+            System.out.println();
+        }
+
+        System.out.println();
+
+        for(i = 0; i < 5; i++)
+        {
+            int size = res1[i].length;
+
+            for (j = 0; j < size; j++)
+            {
+                System.out.print(res1[i][j].toString());
+                System.out.print(' ');
+            }
+
+            System.out.println();
+        }
+
+        System.out.println();
+
+        for(i = 0; i < 5; i++)
+        {
+            int size = res2[i].length;
+
+            for (j = 0; j < size; j++)
+            {
+                System.out.print(res2[i][j].toString());
                 System.out.print(' ');
             }
 
