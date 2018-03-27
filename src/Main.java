@@ -1,7 +1,6 @@
 import Jama.Matrix;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.io.*;
 
 public class Main
 {
@@ -19,97 +18,195 @@ public class Main
         }
     }
 
-    public static void main(String args[])
+    // returns the element if found, else RareElement with -1 on index
+    private static RareElement getRareElement(RareElement[] line, int index)
+    {
+        for (RareElement element: line)
+        {
+            if (element.index == index)
+                return element;
+        }
+
+        RareElement elem = new RareElement();
+        elem.index = -1;
+        return elem;
+    }
+
+    private static RareElement[][] RareMultiply(RareElement[][] A, RareElement[][] B, int n)
+    {
+        RareElement[][] mmResult = new RareElement[n][n];
+        int lineCount = 0;
+
+        for (int lineA = 0; lineA < n; lineA++)
+        {
+            RareElement diagonalElem = null;
+            RareElement[] tempResultLine = new RareElement[n];
+            int elemCount = 0;
+
+            // TODO Check if line vector exists?
+            for (int columnB = 0; columnB < n ; columnB++)
+            {
+                // calculate element
+                double result = 0;
+
+                for (int k = 0; k < A[lineA].length ;k++ )
+                {
+                    RareElement bElement = getRareElement(B[A[lineA][k].index], columnB);
+                    if (bElement.index != -1)
+                        result+= ( bElement.value * A[lineA][k].value) ;
+                }
+
+                // remember diagonal element to add it later
+                if (result != 0) {
+
+                    RareElement resultElem = new RareElement();
+                    resultElem.index = columnB;
+                    resultElem.value = result;
+
+                    if (lineA == columnB) {
+                        diagonalElem = resultElem;
+                    }
+                    else {
+                        tempResultLine[elemCount] = resultElem;
+                        elemCount++;
+                    }
+                }
+
+            }
+
+            // add the diagonal elem
+            if (diagonalElem != null) {
+                tempResultLine[elemCount] = diagonalElem;
+                elemCount++;
+            }
+
+            // copy each element in a new vector with exact size
+
+            RareElement[] resultLine = new RareElement[elemCount];
+            System.arraycopy(tempResultLine, 0, resultLine, 0, elemCount);
+
+            // TODO Can find number of lines before?
+            mmResult[lineCount] = resultLine;
+            lineCount++;
+        }
+
+        return mmResult;
+    }
+    public static void main(String args[]) throws IOException
     {
         eps = Math.pow(10, -7);
 
-        double[][] matrix1 = {
-                {102.5, 0, 2.5, 0, 9},
-                {3.5, 104.88, 1.05, 0, 0.33},
-                {0, 0, 100, 0, 0},
-                {0, 1.3, 0, 101.3, 0},
-                {0.73, 0, 0, 1.5, 102.23}
+        double[][] example = {
+                {1.0, 2.0, 0, 0, 4.0},
+                {0, 9.0, 0, 0, 21.0},
+                {-4.0, 0, -5.9, -1.0, 0},
+                {99.0, 7.0, 7.0, 5.0, -0.9},
+                {51.4, 0, 0, 0, -73.1}
         };
 
-        double[][] matrix2 = {
-                {3.0, 1.0, 0, 2.0, 0},
-                {3.5, 105, 0, 21, 0},
-                {1.2, 51.3, 2.1, -5.1, 0},
-                {0, 0, 4.4, 7.7, 0},
-                {-1.9, 0, 31, 0, 13}
+        /*double[][] example1 = {
+                {1.0, 2.0, 0, 0, 4.0},
+                {0, 9.0, 0, 0, 21.0},
+                {-4.0, 0, -5.9, -1.0, 0},
+                {99.0, 7.0, 7.0, 5.0, -0.9},
+                {51.4, 0, 0, 0, -73.1}
+        };*/
+
+        double[][] example1 = {
+                {1.0},
+                {0},
+                {-4.0},
+                {99.0},
+                {51.4}
         };
 
-        Matrix A = new Matrix(matrix1);
-        Matrix B = new Matrix(matrix2);
 
-        RareElement[][] rareA = memorizeRareMatrix(A);
-        RareElement[][] rareB = memorizeRareMatrix(B);
 
-        Matrix rareAPlusRareB = addRareMatrices(rareA, rareB);
+        Matrix ex = new Matrix(example);
+        Matrix ex1 = new Matrix(example1);
+
+        //ex.print(5, 1);
+        //ex1.print(5, 1);
+
+        RareElement[][] res = memorizeRareMatrix(ex);
+        RareElement[][] res1 = memorizeRareMatrix(ex1);
+
+        //RareElement[][] res2 = RareMultiply(res, res1, 5);
+
+        //Matrix aMatrix, bMatrix, aOribMatrix, aPlusbMatrix;
+        //aMatrix = readMatrixFromFile("a.txt");
+        //bMatrix = readMatrixFromFile("b.txt");
+        //aMatrix.print(10, 5);
+        //bMatrix.print(10, 5);
+
+        //Matrix aArray = readArrayFromFile("a.txt");
+        //aArray.print(1, 5);
     }
 
-    private static Matrix addRareMatrices(RareElement[][] X, RareElement[][] Y)
+    private static Matrix readMatrixFromFile(String filename) throws IOException
     {
-        int m = getColumnDimension(X);
-        int m2 = getColumnDimension(Y);
-        int i, j, k, k2, l1, l2;
+        Matrix matrixRead;
+        BufferedReader bufferedReader = new BufferedReader(new FileReader(filename));
+        String line;
+        int index = 1, n = 0, m = 3, rowIndex = 0, colIndex = 0;
 
-        if(X.length != Y.length || m != m2)
+        while((line = bufferedReader.readLine()) != null)
         {
-            try
+            if(index == 2022)
             {
-                throw new Exception("The two matrices must have the same dimensions!");
-            } catch (Exception e)
-            {
-                e.printStackTrace();
+                String[] dimensions = line.split(" ");
+                n = Integer.parseInt(dimensions[0]);
+                m = Integer.parseInt(dimensions[1]);
+                line = bufferedReader.readLine();
+                break;
             }
+            index++;
         }
 
-        Matrix result = new Matrix(X.length, m);
+        matrixRead = new Matrix(n, m);
 
-        for(i = 0; i < X.length; i++)
+        while((line = bufferedReader.readLine()) != null)
         {
-            l1 = X[i].length;
-            k = 0;
-            j = 0;
+            String[] stringValues = line.split(", ");
 
-            // Las adunarea dintre elementele de pe diagonala la sfarsit..
-            while(j < l1 - 1)
+            double[] values = new double[m];
+
+            for(colIndex = 0; colIndex < m; colIndex ++)
             {
-                l2 = Y[i].length;
-
-                if(Y[i][k].index == X[i][j].index)
-                {
-                    result.set(i, X[i][j].index, Y[i][k].value + X[i][j].value);
-                }
-                else
-                {
-
-                }
-
-                j++;
+                values[colIndex] = Double.parseDouble(stringValues[colIndex].trim());
+                matrixRead.set(rowIndex, colIndex, values[colIndex]);
             }
+
+            rowIndex++;
         }
 
-        return result;
+        return matrixRead;
     }
 
-    private static int getColumnDimension(RareElement[][] X)
+    private static Matrix readArrayFromFile(String filename) throws IOException
     {
-        int i, j, max = -1;
+        Matrix arrayRead;
+        int n, index = 0;
+        BufferedReader bufferedReader = new BufferedReader(new FileReader(filename));
+        String line;
+        double value;
 
-        for(i = 0; i < X.length; i++)
+        n = Integer.parseInt(bufferedReader.readLine().trim());
+        arrayRead = new Matrix(n, 1);
+        //citesc linia goala
+        line = bufferedReader.readLine();
+
+        while(index < 2018)
         {
-            for(j = 0; j < X[i].length; j++)
-            {
-                if (X[i][j].index > max)
-                {
-                    max = X[i][j].index;
-                }
-            }
+            line = bufferedReader.readLine().trim();
+
+            value = Double.parseDouble(line);
+            arrayRead.set(index, 0, value);
+
+            index++;
         }
 
-        return max;
+        return arrayRead;
     }
 
     private static RareElement[][] memorizeRareMatrix(Matrix x)
@@ -154,13 +251,15 @@ public class Main
                 }
             }
 
-            value = x.get(rowIndex, rowIndex);
-
-            if(Math.abs(value) > eps)
+            if (rowIndex < m)
             {
-                memResult[rowIndex][memResultColIndex] = new RareElement();
-                memResult[rowIndex][memResultColIndex].value = value;
-                memResult[rowIndex][memResultColIndex].index = rowIndex;
+                value = x.get(rowIndex, rowIndex);
+
+                if (Math.abs(value) > eps) {
+                    memResult[rowIndex][memResultColIndex] = new RareElement();
+                    memResult[rowIndex][memResultColIndex].value = value;
+                    memResult[rowIndex][memResultColIndex].index = rowIndex;
+                }
             }
         }
 
@@ -183,23 +282,5 @@ public class Main
 
             System.out.println();
         }
-    }
-
-    private static List<Integer> minMax(int a, int b)
-    {
-        List<Integer> minMax = new ArrayList<Integer>();
-
-        if(a > b)
-        {
-            minMax.add(b);
-            minMax.add(a);
-        }
-        else
-        {
-            minMax.add(a);
-            minMax.add(b);
-        }
-
-        return minMax;
     }
 }
