@@ -1,5 +1,8 @@
 import Jama.Matrix;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class Main
 {
     private static double eps;
@@ -20,35 +23,93 @@ public class Main
     {
         eps = Math.pow(10, -7);
 
-        double[][] example = {
-                {1.0, 2.0, 0, 0, 4.0},
-                {0, 9.0, 0, 0, 21.0},
-                {-4.0, 0, -5.9, -1.0, 0},
-                {99.0, 7.0, 7.0, 5.0, -0.9},
-                {51.4, 0, 0, 0, -73.1}
+        double[][] matrix1 = {
+                {102.5, 0, 2.5, 0, 9},
+                {3.5, 104.88, 1.05, 0, 0.33},
+                {0, 0, 100, 0, 0},
+                {0, 1.3, 0, 101.3, 0},
+                {0.73, 0, 0, 1.5, 102.23}
         };
 
-        Matrix ex = new Matrix(example);
+        double[][] matrix2 = {
+                {3.0, 1.0, 0, 2.0, 0},
+                {3.5, 105, 0, 21, 0},
+                {1.2, 51.3, 2.1, -5.1, 0},
+                {0, 0, 4.4, 7.7, 0},
+                {-1.9, 0, 31, 0, 13}
+        };
 
-        ex.print(5, 1);
+        Matrix A = new Matrix(matrix1);
+        Matrix B = new Matrix(matrix2);
 
-        RareElement[][] res = memorizeRareMatrix(ex);
+        RareElement[][] rareA = memorizeRareMatrix(A);
+        RareElement[][] rareB = memorizeRareMatrix(B);
 
-        System.out.println();
-        int i, j;
+        Matrix rareAPlusRareB = addRareMatrices(rareA, rareB);
+    }
 
-        for(i = 0; i < 5; i++)
+    private static Matrix addRareMatrices(RareElement[][] X, RareElement[][] Y)
+    {
+        int m = getColumnDimension(X);
+        int m2 = getColumnDimension(Y);
+        int i, j, k, k2, l1, l2;
+
+        if(X.length != Y.length || m != m2)
         {
-            int size = res[i].length;
-
-            for (j = 0; j < size; j++)
+            try
             {
-                System.out.print(res[i][j].toString());
-                System.out.print(' ');
+                throw new Exception("The two matrices must have the same dimensions!");
+            } catch (Exception e)
+            {
+                e.printStackTrace();
             }
-
-            System.out.println();
         }
+
+        Matrix result = new Matrix(X.length, m);
+
+        for(i = 0; i < X.length; i++)
+        {
+            l1 = X[i].length;
+            k = 0;
+            j = 0;
+
+            // Las adunarea dintre elementele de pe diagonala la sfarsit..
+            while(j < l1 - 1)
+            {
+                l2 = Y[i].length;
+
+                if(Y[i][k].index == X[i][j].index)
+                {
+                    result.set(i, X[i][j].index, Y[i][k].value + X[i][j].value);
+                }
+                else
+                {
+
+                }
+
+                j++;
+            }
+        }
+
+        return result;
+    }
+
+    private static int getColumnDimension(RareElement[][] X)
+    {
+        int i, j, max = -1;
+
+        for(i = 0; i < X.length; i++)
+        {
+            for(j = 0; j < X[i].length; j++)
+            {
+                if (X[i][j].index > max)
+                {
+                    max = X[i][j].index;
+                }
+            }
+        }
+
+        return max;
     }
 
     private static RareElement[][] memorizeRareMatrix(Matrix x)
@@ -104,5 +165,41 @@ public class Main
         }
 
         return memResult;
+    }
+
+    private static void printRare(RareElement[][] x)
+    {
+        int i, j;
+
+        for(i = 0; i < 5; i++)
+        {
+            int l = x[i].length;
+
+            for(j = 0; j < l; j++)
+            {
+                System.out.print(x[i][j].toString());
+                System.out.print(' ');
+            }
+
+            System.out.println();
+        }
+    }
+
+    private static List<Integer> minMax(int a, int b)
+    {
+        List<Integer> minMax = new ArrayList<Integer>();
+
+        if(a > b)
+        {
+            minMax.add(b);
+            minMax.add(a);
+        }
+        else
+        {
+            minMax.add(a);
+            minMax.add(b);
+        }
+
+        return minMax;
     }
 }
