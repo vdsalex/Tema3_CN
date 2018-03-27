@@ -50,21 +50,7 @@ public class Main
 
     private static RareElement[][] addRareMatrices(RareElement[][] X, RareElement[][] Y)
     {
-        int n = X.length;
-        int m2 = getColumnDimension(Y);
-        int i, j, k, k2, l1, l2;
-
-        /*if(X.length != Y.length || n != m2)
-        {
-            try
-            {
-                throw new Exception("The two matrices must have the same dimensions!");
-            } catch (Exception e)
-            {
-                e.printStackTrace();
-            }
-        }
-        */
+        int n = X.length < Y.length ? Y.length : X.length;
 
         RareElement[][] mmResult = new RareElement[n][];
         int lineCount = 0;
@@ -78,17 +64,27 @@ public class Main
             // TODO Check if line vector exists?
             for (int element = 0; element < n ; element++)
             {
-                RareElement xRare = getRareElement(X[line], element);
-                RareElement yRare = getRareElement(X[line], element);
-
                 double x,y;
-                if (xRare.index == -1)
+                if (line >= X.length)
                     x = 0;
-                else x = xRare.value;
+                else
+                {
+                    RareElement xRare = getRareElement(X[line], element);
+                    if (xRare.index == -1)
+                        x = 0;
+                    else x = xRare.value;
 
-                if (yRare.index == -1)
+                }
+
+                if (line >= Y.length)
                     y = 0;
-                else y = yRare.value;
+                else
+                {
+                    RareElement yRare = getRareElement(Y[line], element);
+                    if (yRare.index == -1)
+                        y = 0;
+                    else y = yRare.value;
+                }
 
                 // calculate element
                 double result = x + y;
@@ -220,11 +216,10 @@ public class Main
         };
 
         double[][] example1 = {
-                {1.0, 2.0, 0, 0, 4.0},
-                {0, 9.0, 0, 0, 21.0},
-                {-4.0, 0, -5.9, -1.0, 0},
-                {99.0, 7.0, 7.0, 5.0, -0.9},
-                {51.4, 0, 0, 0, -73.1}
+                {1.0, 2.0, 0, 0},
+                {0, 9.0, 0, 0},
+                {-4.0, 0, -5.9, -1.0},
+                {99.0, 7.0, 7.0, 5.0},
         };
 
         /*double[][] example1 = {
