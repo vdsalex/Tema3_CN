@@ -49,7 +49,6 @@ public class Main
 
                 for (int k = 0; k < A[lineA].length ;k++ )
                 {
-                    RareElement debug_first = A[lineA][k];
                     RareElement bElement = getRareElement(B[A[lineA][k].index], columnB);
                     if (bElement.index != -1)
                         result+= ( bElement.value * A[lineA][k].value) ;
@@ -74,12 +73,15 @@ public class Main
             }
 
             // add the diagonal elem
-            tempResultLine[elemCount] = diagonalElem;
+            if (diagonalElem != null) {
+                tempResultLine[elemCount] = diagonalElem;
+                elemCount++;
+            }
 
             // copy each element in a new vector with exact size
 
-            RareElement[] resultLine = new RareElement[elemCount + 1];
-            System.arraycopy(tempResultLine, 0, resultLine, 0, elemCount + 1);
+            RareElement[] resultLine = new RareElement[elemCount];
+            System.arraycopy(tempResultLine, 0, resultLine, 0, elemCount);
 
             // TODO Can find number of lines before?
             mmResult[lineCount] = resultLine;
@@ -100,13 +102,23 @@ public class Main
                 {51.4, 0, 0, 0, -73.1}
         };
 
-        double[][] example1 = {
+        /*double[][] example1 = {
                 {1.0, 2.0, 0, 0, 4.0},
                 {0, 9.0, 0, 0, 21.0},
                 {-4.0, 0, -5.9, -1.0, 0},
                 {99.0, 7.0, 7.0, 5.0, -0.9},
                 {51.4, 0, 0, 0, -73.1}
+        };*/
+
+        double[][] example1 = {
+                {1.0},
+                {0},
+                {-4.0},
+                {99.0},
+                {51.4}
         };
+
+
 
         Matrix ex = new Matrix(example);
         Matrix ex1 = new Matrix(example1);
@@ -118,7 +130,7 @@ public class Main
         RareElement[][] res1 = memorizeRareMatrix(ex1);
 
         RareElement[][] res2 = RareMultiply(res, res1, 5);
-        
+
         int i, j;
 
         for(i = 0; i < 5; i++)
@@ -146,7 +158,9 @@ public class Main
                 System.out.print(' ');
             }
 
-            System.out.println();
+            if (size!= 0)
+                System.out.println();
+            else System.out.println("(,)");
         }
 
         System.out.println();
@@ -161,7 +175,9 @@ public class Main
                 System.out.print(' ');
             }
 
-            System.out.println();
+            if (size!= 0)
+                System.out.println();
+            else System.out.println("(,)");
         }
     }
 
@@ -207,13 +223,15 @@ public class Main
                 }
             }
 
-            value = x.get(rowIndex, rowIndex);
-
-            if(Math.abs(value) > eps)
+            if (rowIndex < m)
             {
-                memResult[rowIndex][memResultColIndex] = new RareElement();
-                memResult[rowIndex][memResultColIndex].value = value;
-                memResult[rowIndex][memResultColIndex].index = rowIndex;
+                value = x.get(rowIndex, rowIndex);
+
+                if (Math.abs(value) > eps) {
+                    memResult[rowIndex][memResultColIndex] = new RareElement();
+                    memResult[rowIndex][memResultColIndex].value = value;
+                    memResult[rowIndex][memResultColIndex].index = rowIndex;
+                }
             }
         }
 
