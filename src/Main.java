@@ -41,24 +41,6 @@ public class Main
         return elem;
     }
 
-    private static int getColumnDimension(RareElement[][] X)
-    {
-        int i, j, max = -1;
-
-        for(i = 0; i < X.length; i++)
-        {
-            for(j = 0; j < X[i].length; j++)
-            {
-                if (X[i][j].index > max)
-                {
-                    max = X[i][j].index;
-                }
-            }
-        }
-
-        return max;
-    }
-
     private static RareElement[][] addRareMatrices(RareElement[][] X, RareElement[][] Y)
     {
         int n = X.length < Y.length ? Y.length : X.length;
@@ -262,15 +244,50 @@ public class Main
 
         Instant start = Instant.now();
 
-        RareElement[][] aMatrix, bMatrix, vector, aorib, aplusb;
+        RareElement[][] aMatrix, bMatrix, aVector, bVector, aorib, aplusb, commonVector, aplubVect, aoribVect;
 
         aMatrix = readMatrixFromFile("a.txt");
         bMatrix = readMatrixFromFile("b.txt");
-        aorib = readMatrixFromFile("aorib.txt");
 
-        res = RareMultiply(aMatrix,bMatrix, aMatrix.length);
+        commonVector = new RareElement[aMatrix.length][1];
+        for (int i=0;i<aMatrix.length;i++)
+        {
+            RareElement elem = new RareElement();
+            elem.index = 0;
+            elem.value = aMatrix.length - i;
+
+            commonVector[i][0] = elem;
+        }
+
+        aVector = readArrayFromFile("a.txt");
+        bVector = readArrayFromFile("b.txt");
+
+        aorib = readMatrixFromFile("aorib.txt");
+        aplusb = readMatrixFromFile("aplusb.txt");
+
+        aplubVect = readArrayFromFile("aplusb.txt");
+        aoribVect = readArrayFromFile("aorib.txt");
+
+        //res = addRareMatrices(aMatrix, bMatrix);
+        //res1 = RareMultiply(aMatrix, bMatrix, aMatrix.length);
+
+        //res = RareMultiply(aMatrix, commonVector, aMatrix.length);
+        //res1 = RareMultiply(bMatrix, commonVector, bMatrix.length);
+
+        res = RareMultiply(aorib, commonVector, aorib.length);
+        res1 = RareMultiply(aplusb, commonVector, aplusb.length);
 
         Instant end = Instant.now();
+
+        //System.out.println(areEqual(res, aplusb));
+        //System.out.println(areEqual(res, aorib));
+
+        //System.out.println(areEqual(res, aVector));
+        //System.out.println(areEqual(res1, bVector));
+
+        System.out.println(areEqual(res, aoribVect));
+        System.out.println(areEqual(res1, aplubVect));
+
         System.out.println(Duration.between(start, end));
 
     }
@@ -287,31 +304,12 @@ public class Main
         int vectorSize = Integer.parseInt(textLine);
         int maxLine = 0;
 
-        RareElement[][] outRareVector = new RareElement[vectorSize][1];
-
         // read empty line
         bufferedReader.readLine();
 
         while(!(textLine = bufferedReader.readLine()).isEmpty() )
         {
-            value = Double.parseDouble(textLine);
 
-            if (Math.abs(value) > eps) {
-
-                RareElement tempRare = getRareElement(outRareVector[line], column);
-                if (tempRare.index == -1) {
-                    // daca n-a fost gasit in linie deja
-
-                    RareElement elem = new RareElement();
-                    elem.value = value;
-                    elem.index = column;
-                    outRareVector[line][0] = elem;
-                } else {
-                    // a fost gasit deja
-                    tempRare.value += value;
-                }
-            }
-            line++;
         }
 
         // read matrix
@@ -441,46 +439,44 @@ public class Main
         return memResult;
     }
 
-    private static Matrix readArrayFromFile(String filename) throws IOException
+    private static RareElement[][] readArrayFromFile(String filename) throws IOException
     {
-        Matrix arrayRead;
-        int n, index = 0;
         BufferedReader bufferedReader = new BufferedReader(new FileReader(filename));
-        String line;
+
+        String textLine;
+        int line = 0 ,column = 0;
         double value;
+        textLine = bufferedReader.readLine();
+        int vectorSize = Integer.parseInt(textLine);
 
-        n = Integer.parseInt(bufferedReader.readLine().trim());
-        arrayRead = new Matrix(n, 1);
-        //citesc linia goala
-        line = bufferedReader.readLine();
+        RareElement[][] outRareVector = new RareElement[vectorSize][1];
 
-        while(index < 2018)
+        // read empty line
+        bufferedReader.readLine();
+
+        while(!(textLine = bufferedReader.readLine()).isEmpty() )
         {
-            line = bufferedReader.readLine().trim();
+            value = Double.parseDouble(textLine);
 
-            value = Double.parseDouble(line);
-            arrayRead.set(index, 0, value);
+            if (Math.abs(value) > eps) {
 
-            index++;
+                RareElement tempRare = getRareElement(outRareVector[line], column);
+                if (tempRare.index == -1) {
+                    // daca n-a fost gasit in linie deja
+
+                    RareElement elem = new RareElement();
+                    elem.value = value;
+                    elem.index = column;
+                    outRareVector[line][0] = elem;
+                } else {
+                    // a fost gasit deja
+                    tempRare.value += value;
+                }
+            }
+            line++;
         }
 
-        return arrayRead;
-    }
-
-    private static boolean thereAreAtMost10NonzeroElements(RareElement[][] x)
-    {
-        int i, j;
-        int n = x.length;
-        int m;
-
-        for(i = 0; i < n; i++)
-        {
-            m = x[i].length;
-
-            if(m > 10)return false;
-        }
-
-        return true;
+        return outRareVector;
     }
 
     private static boolean areEqual(RareElement[][] x, RareElement[][] y)
@@ -502,7 +498,7 @@ public class Main
 
             while(j < m1)
             {
-                if(x[i][j].index != y[i][j].index || x[i][j].value != y[i][j].value)
+                if(x[i][j].index != y[i][j].index || Math.abs(x[i][j].value - y[i][j].value) > eps)
                 {
                     return false;
                 }
