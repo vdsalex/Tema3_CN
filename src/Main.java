@@ -1,5 +1,11 @@
 import Jama.Matrix;
 
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
+import java.time.Duration;
+import java.time.Instant;
+
 public class Main
 {
     private static double eps;
@@ -19,10 +25,15 @@ public class Main
     // returns the element if found, else RareElement with -1 on index
     private static RareElement getRareElement(RareElement[] line, int index)
     {
-        for (RareElement element: line)
+        if (line!= null)
         {
-            if (element.index == index)
-                return element;
+            for (RareElement elem : line) {
+                if (elem!=null)
+                {
+                    if (elem.index == index)
+                        return elem;
+                }
+            }
         }
 
         RareElement elem = new RareElement();
@@ -148,7 +159,7 @@ public class Main
                 }
 
                 // remember diagonal element to add it later
-                if (result != 0) {
+                if (Math.abs(result) > eps) {
 
                     RareElement resultElem = new RareElement();
                     resultElem.index = columnB;
@@ -176,7 +187,6 @@ public class Main
             RareElement[] resultLine = new RareElement[elemCount];
             System.arraycopy(tempResultLine, 0, resultLine, 0, elemCount);
 
-            // TODO Can find number of lines before?
             mmResult[lineCount] = resultLine;
             lineCount++;
         }
@@ -203,7 +213,7 @@ public class Main
             else System.out.println("(,)");
         }
     }
-    public static void main(String args[])
+    public static void main(String args[]) throws IOException
     {
         eps = Math.pow(10, -7);
 
@@ -216,10 +226,11 @@ public class Main
         };
 
         double[][] example1 = {
-                {1.0, 2.0, 0, 0},
-                {0, 9.0, 0, 0},
-                {-4.0, 0, -5.9, -1.0},
-                {99.0, 7.0, 7.0, 5.0},
+                {1.0, 2.0, 0, 0, 4.0},
+                {0, 9.0, 0, 0, 21.0},
+                {-4.0, 0, -5.9, -1.0, 0},
+                {99.0, 7.0, 7.0, 5.0, -0.9},
+                {51.4, 0, 0, 0, -73.1}
         };
 
         /*double[][] example1 = {
@@ -231,21 +242,146 @@ public class Main
         };
 */
 
+        RareElement[][] res, res1, res2;
 
-        Matrix ex = new Matrix(example);
+        /*Matrix ex = new Matrix(example);
         Matrix ex1 = new Matrix(example1);
 
-        ex.print(5, 1);
-        ex1.print(5, 1);
 
-        RareElement[][] res = memorizeRareMatrix(ex);
-        RareElement[][] res1 = memorizeRareMatrix(ex1);
+        //ex.print(5, 1);
+        //ex1.print(5, 1);
+        res = memorizeRareMatrix(ex);
+        res1 = memorizeRareMatrix(ex1);
 
-        RareElement[][] res2 = addRareMatrices(res, res1);
+        res2 = RareMultiply(res, res1, res.length);
 
         printRareMatrix(res);
         printRareMatrix(res1);
         printRareMatrix(res2);
+        */
+
+        Instant start = Instant.now();
+
+        RareElement[][] aMatrix, bMatrix, vector, aorib, aplusb;
+
+        aMatrix = readMatrixFromFile("a.txt");
+        bMatrix = readMatrixFromFile("b.txt");
+        aorib = readMatrixFromFile("aorib.txt");
+
+        res = RareMultiply(aMatrix,bMatrix, aMatrix.length);
+
+        Instant end = Instant.now();
+        System.out.println(Duration.between(start, end));
+
+    }
+
+    private static RareElement[][] readMatrixFromFile(String filename) throws IOException
+    {
+        BufferedReader bufferedReader = new BufferedReader(new FileReader(filename));
+
+        RareElement[][] outRareMatrix = new RareElement[100000][5000];
+        String textLine;
+        int line = 0 ,column = 0;
+        double value;
+        textLine = bufferedReader.readLine();
+        int vectorSize = Integer.parseInt(textLine);
+        int maxLine = 0;
+
+        RareElement[][] outRareVector = new RareElement[vectorSize][1];
+
+        // read empty line
+        bufferedReader.readLine();
+
+        while(!(textLine = bufferedReader.readLine()).isEmpty() )
+        {
+            value = Double.parseDouble(textLine);
+
+            if (Math.abs(value) > eps) {
+
+                RareElement tempRare = getRareElement(outRareVector[line], column);
+                if (tempRare.index == -1) {
+                    // daca n-a fost gasit in linie deja
+
+                    RareElement elem = new RareElement();
+                    elem.value = value;
+                    elem.index = column;
+                    outRareVector[line][0] = elem;
+                } else {
+                    // a fost gasit deja
+                    tempRare.value += value;
+                }
+            }
+            line++;
+        }
+
+        // read matrix
+
+        while((textLine = bufferedReader.readLine()) != null)
+        {
+            String[] stringValues = textLine.split(", ");
+
+            value = Double.parseDouble(stringValues[0]);
+            line = Integer.parseInt(stringValues[1]);
+            column = Integer.parseInt(stringValues[2]);
+
+            if (Math.abs(value) > eps) {
+
+                if (line> maxLine)
+                    maxLine = line;
+
+                RareElement tempRare = getRareElement(outRareMatrix[line], column);
+                if (tempRare.index == -1) {
+                    // daca n-a fost gasit in linie deja
+
+                    RareElement elem = new RareElement();
+                    elem.value = value;
+                    elem.index = column;
+                    outRareMatrix[line][column] = elem;
+                } else {
+                    // a fost gasit deja
+                    tempRare.value += value;
+                }
+            }
+        }
+
+        // compact the rare matrix
+        RareElement[][] compactedMatrix = new RareElement[maxLine + 1][];
+
+        for (int i = 0; i < maxLine +1;i++)
+        {
+            // check how many elements on line
+            int elemPerLine = 0 ;
+            for (RareElement rareElem:outRareMatrix[i])
+            {
+                if (rareElem!=null)
+                    elemPerLine++;
+            }
+            RareElement[] rareLine = new RareElement[elemPerLine];
+
+            RareElement diagElem = null;
+            int elemCounter = 0;
+            for (RareElement rareElem:outRareMatrix[i])
+            {
+                if (rareElem!=null)
+                {
+                    if (rareElem.index == i)
+                        diagElem = rareElem;
+                    else
+                    {
+                        rareLine[elemCounter] = rareElem;
+                        elemCounter++;
+                    }
+
+                }
+            }
+
+            if (diagElem != null)
+                rareLine[elemCounter] = diagElem;
+
+            compactedMatrix[i] = rareLine;
+        }
+
+        return compactedMatrix;
     }
 
     private static RareElement[][] memorizeRareMatrix(Matrix x)
@@ -304,4 +440,78 @@ public class Main
 
         return memResult;
     }
+
+    private static Matrix readArrayFromFile(String filename) throws IOException
+    {
+        Matrix arrayRead;
+        int n, index = 0;
+        BufferedReader bufferedReader = new BufferedReader(new FileReader(filename));
+        String line;
+        double value;
+
+        n = Integer.parseInt(bufferedReader.readLine().trim());
+        arrayRead = new Matrix(n, 1);
+        //citesc linia goala
+        line = bufferedReader.readLine();
+
+        while(index < 2018)
+        {
+            line = bufferedReader.readLine().trim();
+
+            value = Double.parseDouble(line);
+            arrayRead.set(index, 0, value);
+
+            index++;
+        }
+
+        return arrayRead;
+    }
+
+    private static boolean thereAreAtMost10NonzeroElements(RareElement[][] x)
+    {
+        int i, j;
+        int n = x.length;
+        int m;
+
+        for(i = 0; i < n; i++)
+        {
+            m = x[i].length;
+
+            if(m > 10)return false;
+        }
+
+        return true;
+    }
+
+    private static boolean areEqual(RareElement[][] x, RareElement[][] y)
+    {
+        int n = x.length;
+        int m1, i, j, m2;
+
+        for(i = 0; i < n; i++)
+        {
+            m1 = x[i].length;
+            m2 = y[i].length;
+
+            if(m1 != m2)
+            {
+                return false;
+            }
+
+            j = 0;
+
+            while(j < m1)
+            {
+                if(x[i][j].index != y[i][j].index || x[i][j].value != y[i][j].value)
+                {
+                    return false;
+                }
+
+                j++;
+            }
+        }
+
+        return true;
+    }
+
 }
